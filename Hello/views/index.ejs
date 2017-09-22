@@ -5,18 +5,45 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script type="text/javascript" src="/libs/d3/d3.js"></script>
     <style>
-      .axis {
+      .func a {
+        display: inline-block;
+        color: beige;
+        padding: 3px 5px;
+        margin-right: 6px;
+        background-color: aqua;
+        border-radius: 4px;
+        box-shadow: 1px 1px 4px #000;
+        text-decoration: none;
+      }
+      svg{
+        display: block;
+      }
+      .axis path,
+      .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+      }
 
+      .axis text {
+        font: 10px sans-serif;
       }
     </style>
   </head>
   <body>
     <h1>d3 test</h1>
     <p>Welcome to d3 test</p>
-    <a href="/parallels">parallels</a>
+    <div class="func">
+      <a href="/parallels">parallels</a>
+      <a href="http://www.baidu.com">baidu</a>
+    </div>
     <p>hello world</p>
     <p>hello world</p>
     <svg class="rect"></svg>
+    <svg class="axisY"></svg>
+    <svg class="axisX"></svg>
+    <svg class="line"></svg>
+    <svg class="arc"></svg>
     <script type="text/javascript" src="/javascripts/d3-test1.js"></script>
   </body>
 </html>

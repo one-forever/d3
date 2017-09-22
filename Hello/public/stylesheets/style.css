@@ -8,14 +8,5 @@ html, body{
 a {
   color: #00B7FF;
 }
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
 
-.axis text {
-  font: 10px sans-serif;
-}
 
