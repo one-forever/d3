@@ -1,0 +1,20 @@
+{
+  "name": "d3",
+  "description": "d3 学习",
+  "main": "",
+  "authors": [
+    "zxy"
+  ],
+  "license": "MIT",
+  "moduleType": [],
+  "homepage": "https://github.comss/eshengsky/iBlog2",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/libs",
+    "test",
+    "tests"
+  ],
+  "dependencies": {}
+}
