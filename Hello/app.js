@@ -7,6 +7,9 @@ let bodyParser = require('body-parser');
 
 let index = require('./routes/index');
 let users = require('./routes/users');
+
+let hierarchy = require('./routes/hierarchy');
+
 let parallels = require('./routes/parallels');
 let line = require('./routes/line');
 
@@ -28,6 +31,7 @@ app.use('/', index);
 app.use('/users', users);
 app.use('/parallels', parallels);
 app.use('/line', line);
+app.use('/hierarchy/', hierarchy);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
