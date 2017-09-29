@@ -18,7 +18,13 @@ let app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-
+app.engine('ejs', require('ejs-mate'));
+app.locals._layoutFile = 'index.ejs';
+app.set('view options', {
+  "open": "{{",
+  "close": "}}",
+    "layout": 'index.ejs'
+});//无效 在express 3.0*以后的版本中已不再使用layout布局了
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
@@ -26,6 +32,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 app.use('/', index);
 app.use('/users', users);
