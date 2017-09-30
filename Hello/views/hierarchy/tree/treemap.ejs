@@ -1,4 +1,5 @@
-<% include ../../header.ejs %>
+<% layout('layout') %>
+<% block('header').append(`
     <style>
 
         body {
@@ -25,22 +26,24 @@
         }
 
     </style>
+`) %>
+
 
 <script>
 
-    var width = 960,
+    let width = 960,
         height = 1060;
 
-    var format = d3.format(",d");
+    let format = d3.format(",d");
     console.log('format: ', format);
-    var color = d3.scaleOrdinal()
+    let color = d3.scaleOrdinal()
         .range(d3.schemeCategory10
             .map(function(c) { c = d3.rgb(c); c.opacity = 0.6; return c; }));
     console.log('color: ', color);
-    var stratify = d3.stratify()
+    let stratify = d3.stratify()
         .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
     console.log('stratify: ', stratify);
-    var treemap = d3.treemap()
+    let treemap = d3.treemap()
         .size([width, height])
         .padding(1)
         .round(true);
@@ -48,12 +51,21 @@
     d3.csv("/files/csv/flare", type, function(error, data) {
         if (error) throw error;
         console.log('data: ', data);
-        var root = stratify(data)
+        data = [{id: "aaa", value: 0},
+
+            {id: "aaa.analytics", value: 1},
+
+            {id: 'aaa.aaa', value: 1},
+            {id: 'aaa.ccc', value: 1},
+            {id: 'aaa.ddd', value: 1},
+            {id: 'aaa.eee', value:1},
+
+        ]
+        let root = stratify(data)
             .sum(function(d) { return d.value; })
             .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
         console.log('root: ', root);
         treemap(root);
-
         d3.select("body")
             .selectAll(".node")
             .data(root.leaves())
@@ -79,4 +91,3 @@
     }
 
 </script>
-<% include ../../footer.ejs%>
