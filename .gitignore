@@ -133,9 +133,8 @@ fabric.properties
 
 /.gitignore
 /.idea
-/d3-api-demo/
 /Hello/node_modules/
 /Hello/public/libs/
 /missionRoom-d3-v4/public/libs/
 /missionRoom-d3-v4/node_modules/
-/missionRoom-d3-v4/
+

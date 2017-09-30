@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel='stylesheet' href='/stylesheets/svg.css' />
+    <script type="text/javascript" src="/libs/d3/d3.js"></script>
+    <script type="text/javascript" src="/libs/jquery/dist/jquery.js"></script>
+    <script type="text/javascript" src="/libs/vis/dist/vis.js"></script>
+    <script type="text/javascript" src="/libs/lodash/dist/lodash.js"></script>
+    <style>
+      html, body{
+        height: 100%;
+        font-size: 14px;
+        color: white;
+        background: radial-gradient(circle, #566D7B, #2F414D, #1C232D);
+      }
+      #eventgraph{
+        height: 60%;
+        width: 80%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <div id="eventgraph">
+      <button class="add_custom_object_btn" style="display: none">添加标准对象</button>
+      <div id="customObjectMenu" style="display: none"></div>
+      <div class="fa fa-exchange" title="切换布局" id="sliderShrink"></div>
+      <ul id="set_btn_group">
+        <li class="fa fa-unlock" onclick="switchForceState(0)" title="锁定数据展示"></li>
+        <li id="changeZoomAuto" class="fa fa-crosshairs" onclick="changeZoomAuto()" title="数据聚焦"></li>
+        <li class="fa fa-superpowers" id="changelayout_btn" title="切换数据展示"></li>
+        <li class="fa fa-arrows-alt" id="allshrink" title="收缩列表"></li>
+        <li class="fa fa-file-powerpoint-o" id="roomDesc" title="会战描述"><p id="roomDesc_p"></p></li>
+      </ul>
+      <!--<div id="roomDesc"><span id="roomDesc_control">></span></div>-->
+      <ul id="cutline">
+        <li style="text-align: center;">
+          <div style="display: inline-block;font-weight: bold;">对照列表</div>
+          <span id="hide_api" style="float: right;font-size: 1.2em;cursor: pointer;line-height: 1.2em;"
+                class="fa fa-arrow-circle-down fa-2x"></span>
+        </li>
+        <li>
+          <div class="div_circle" id="circle2"></div>
+          <span>：输入数据</span></li>
+        <li>
+          <div class="div_circle" id="circle4"></div>
+          <span>：结果数据</span></li>
+
+        <li>
+          <div class="div_circle" id="circle6"></div>
+          <span>：回传数据</span></li>
+        <li>
+          <div class="div_circle" id="circle3"></div>
+          <span>：应用系统</span></li>
+        <!--        <li><div class="div_circle" id="circle4"></div></li>
+                <li><div class="div_circle" id="circle5"></div></li>-->
+      </ul>
+    </div>
+    <!--<script type="text/javascript" src="/javascripts/missionsvg.js"></script>-->
+    <script type="text/javascript" src="/javascripts/missionsvg-v4.js"></script>
+    <script type="text/javascript" src="/javascripts/showd3.js"></script>
+  </body>
+</html>
