@@ -269,30 +269,12 @@ var width = $("#eventgraph").width(),
             })
             .strength(10)
         ),
-
-        
-        // .gravity(0)
-        // .friction(0.9)
-        // .forceCollide()
-        // .links(10)
-        // .charge(-100)
-        // // .chargeDistance(2000)
-        // .size([width, height]),
     forceNodesT = [],
     forceNodes = force.nodes(),
     forceLinks = d3.forceLink().distance(function (d) {
         return 100 + d.target.weight * 10;
     }).strength(10).links(),
     zoomG = svg.append("svg:g").attr("class", "zoom").call(zoomer),
-    // rect = zoomG.append("svg:rect")
-    //     .attr("width", width)
-    //     .attr("height", height)
-    //     .attr("fill", "transparent")
-    //     //.attr("opacity", 0.5)
-    //     .attr("stroke", "transparent")
-    //     // .attr("stroke-width", 1)
-    //     //.attr("pointer-events", "all")
-    //     .attr("id", "zrect"),
     brush = zoomG.append("svg:g")
         .datum(function () {
             return {selectedByMouse: false, previouslySelectedByMouse: false};
@@ -312,48 +294,31 @@ $(function () {
     d3.select(window).on("resize", function (e) {
         width = $("#eventgraph").width();
         height = $("#eventgraph").height();
-        svg.attr({
-            width: $("#eventgraph").width(),
-            height: $("#eventgraph").height()
-        });
-        // rect.attr({
-        //     width: $("#eventgraph").width(),
-        //     height: $("#eventgraph").height()
-        // });
-        // tree.size([height * 2, width]);
+        svg
+            .attr('width', $("#eventgraph").width())
+            .attr('height', $("#eventgraph").height());
+
         force.size([width, height]);
         init(forceNodes, forceLinks);
         scaleX = d3.scaleLinear().domain([0, width]).range([0, width]);
         scaleY = d3.scaleLinear().domain([0, height]).range([0, height]);
         zoomer.x(scaleX).y(scaleY);
-        // zoomer.on("zoom", null);
-        // zoomer.on("zoom", redraw);
-        // init(forceNodes, forceLinks);
-        // zoomFit();
     });
 
 
     $("#eventgraph").on("resize", function (e) {
         width = $("#eventgraph").width();
         height = $("#eventgraph").height();
-        svg.attr({
-            width: $("#eventgraph").width(),
-            height: $("#eventgraph").height()
-        });
-        // rect.attr({
-        //     width: $("#eventgraph").width(),
-        //     height: $("#eventgraph").height()
-        // });
-        // tree.size([height * 2, width]);
+        svg
+            .attr('width', $("#eventgraph").width())
+            .attr('height', $("#eventgraph").height());
+
         force.size([width, height]);
         init(forceNodes, forceLinks);
         scaleX = d3.scaleLinear().domain([0, width]).range([0, width]);
         scaleY = d3.scaleLinear().domain([0, height]).range([0, height]);
         zoomer.x(scaleX).y(scaleY);
-        // zoomer.on("zoom", null);
-        // zoomer.on("zoom", redraw);
-        // init(forceNodes, forceLinks);
-        // zoomFitAuto();
+
     });
 
     /*生成自定义对象选择菜单*/
@@ -394,7 +359,7 @@ function zoomFit() {
         scale = 2
     }
     let translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
-
+console.log('zoomFit: ', elementsG);
     // console.trace("zoomFit", translate, scale);
     elementsG
         .transition()
@@ -434,12 +399,12 @@ let treeDiagonal = d3.linkVertical()
 let treeDiagonalC = function (l) {
     let source = {
         x: l.source.x,
-        y: l.source.y + (rMap[l.source.nodeType] || 18)
+        y: l.source.y + (rMap[l.source.data.nodeType] || 18)
     };
 
     let target = {
         x: l.target.x,
-        y: l.target.y - (rMap[l.target.nodeType] || 18)
+        y: l.target.y - (rMap[l.target.data.nodeType] || 18)
     };
 
     return treeDiagonal({source: source, target: target})

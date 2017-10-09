@@ -461,7 +461,6 @@ function renderTree(source) {
 
     trans(depth);
 
-    //                console.log(_links);n
 }
 function unfoldChild(targetMenu, d) {
     d3.event.stopPropagation();
@@ -760,7 +759,8 @@ function renderNodes(nodes, source) {
              renderPieMenu(d3Node, position, radius, null, data);
              }*/
         });
-
+console.log("renderNodes: node", node);
+console.log("renderNodes: nodeEnter", nodeEnter);
     nodeEnter.append("svg:circle")
     // .style("fill", function (d) {
     //     return d._children ? "lightsteelblue" : "#fff";
@@ -860,6 +860,7 @@ function clickParticulars(type, title, id, opts, nodeClass) {
 }
 function renderLinks(nodes, source) {
     treeLinks = tree.links(nodes);
+    console.log('renderLink: ', treeLinks);
     // var link = linksG.selectAll("path.tree-linked")
     var link = linksG.selectAll("g.tree-linked")
         .data(treeLinks, function (d) {
@@ -940,8 +941,9 @@ function trans(depth) {
     depth += 1;
 
     let filterCircle = filterNodes.selectAll("circle");
-
+    console.log(filterNodes, filterCircle);
     if (filterCircle[0].length === 0) {
+        console.log(filterCircle[0]);
         transing = false;
         return;
     }
