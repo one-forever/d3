@@ -359,12 +359,13 @@ function zoomFit() {
         scale = 2
     }
     let translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
-console.log('zoomFit: ', elementsG);
-    // console.trace("zoomFit", translate, scale);
+
+    //zoomer.transform(elementsG, `translate(${fullWidth / 2 - scale * midX}，${fullHeight / 2 - scale * midY})`)
     elementsG
         .transition()
         .duration(500) // milliseconds
-        //.call(zoomer.translate(translate).scale(scale).event);
+        .attr('transform', `translate(${translate})`)
+        .call(zoomer.event);
 }
 
 //自动概览缩放聚焦
@@ -378,24 +379,18 @@ function changeZoomAuto() {
     zoomAuto = !zoomAuto;
     let thisLi = $("#changeZoomAuto");
     thisLi.toggleClass("fa-stop fa-crosshairs");
-    if (zoomAuto) zoomFit();
+    //if (zoomAuto) zoomFit();
 }
 
-
-//tree
-// let tree = d3.layout.tree().size([height * 2, width]).separation(function (a, b) {
-//     console.log(a.parent == b.parent ? (rMap[a.nodeType] + rMap[b.nodeType]) : 2);
-//     return (a.parent == b.parent ? (rMap[a.nodeType] + rMap[b.nodeType]) : (rMap[a.nodeType] + rMap[b.nodeType]));
-// });
 let tree = d3.tree().nodeSize([40, 40]).separation(function (a, b) {
     return (a.parent == b.parent ? 3 : 2);
 });
 
 let treeNodes = null;
 let treeLinks;
-let treeDiagonal = d3.linkVertical()
-    .x(function(d) { return d.x; })
-    .y(function(d) { return d.y; });
+let treeDiagonal = d3.linkHorizontal()
+    .x(function(d) { return d.y; })
+    .y(function(d) { return d.x; });
 let treeDiagonalC = function (l) {
     let source = {
         x: l.source.x,
@@ -412,8 +407,6 @@ let treeDiagonalC = function (l) {
 
 
 function renderTree(source) {
-    console.log(tree, source, treeNodes);
-    // let nodes = tree(treeNodes);
     let root = d3.hierarchy(treeNodes);
     let nodes = tree(root);
     console.log('treeNodes: ',treeNodes, nodes);
@@ -490,7 +483,7 @@ function renderNodes(nodes, source) {
     nodes.forEach(function (d) {
         d.y = d.depth * 180;
     });
-    console.log("renderNodes: ", nodes);
+
     let enterTimer = NaN;
     let ifexcute = false;
     let node = nodesG.selectAll("g.node")
@@ -527,27 +520,9 @@ console.log("renderNodes: node", node);
             }
         })
         .on("mousedown", function (d) {
-            // toggleTree(d);
-            // renderTree(d);
-            if (d.nodeType == 'result' || d.nodeType == 'custom') {
-                // addTab(d)
-                // let left;
-                // let rightClick = isRightClick(event);
-                // if (rightClick) {
-                //     console.debug(d);
-                //     if ((window.width - event.clientX) < (200 + $("#splitterRight").width())) {
-                //         left = event.offsetX - 200;
-                //     } else {
-                //         left = event.offsetX;
-                //     }
-                //     $(".spinner").show();
-                //     $('#message_tabs').show('fast',function () {
-                //         addNodeInfo(d);
-                //     }).css({
-                //         top: event.offsetY,
-                //         left: left
-                //     });
-                // }
+
+            if (d.data.nodeType == 'result' || d.data.nodeType == 'custom') {
+                console.log('鼠标事件！');
             }
 
             if (d3.event.defaultPrevented) return;
@@ -561,8 +536,7 @@ console.log("renderNodes: node", node);
             d3.select(this).classed("selected", d.selectedByMouse = !d.previouslySelectedByMouse);
         }).on('click', function (d) {
             //若是drag事件，则取消click事件触发
-            //if (d3.event.defaultPrevented) return;
-            console.log(d);
+
             if (enterTimer) {
                 clearTimeout(enterTimer);
             }
@@ -713,7 +687,7 @@ console.log("renderNodes: node", node);
             };
             // }
             let configData = [];
-            switch (d.nodeType) {
+            switch (d.data.nodeType) {
                 case 'room':
                     configData = [
                         data.particular,
@@ -734,27 +708,24 @@ console.log("renderNodes: node", node);
             var radius = {innerRadius: rMap[d.nodeType] + 5, outerRadius: rMap[d.nodeType] + 35},
                 position = [0, 0];
             renderPieMenu(d3Node, position, radius, null, configData, 'firstPieMenu');
-            /*            if ($node.is('.result, .backobject, .custom, .object')) {
-             renderPieMenu(d3Node, position, radius, null, data);
-             }*/
+
         });
 
 console.log("renderNodes: nodeEnter", nodeEnter);
     nodeEnter.append("svg:circle")
-    // .style("fill", function (d) {
-    //     return d._children ? "lightsteelblue" : "#fff";
-    // })
         .style("fill-opacity", "1")
-        .attr({
-            r: 1e-6,
-            width: function (d) {
-                return d.name.length * 8 + 30
-            }, height: "18px", x: function (d) {
-                return -(d.name.length * 8 + 30) / 2
-            }, y: function (d) {
-                return "0px";
-            }
+        .attr('r', 1e-6)
+        .attr('width', function (d) {
+            return d.data.name.length * 8 + 30
         })
+        .attr('height', "18px")
+        .attr('x', function (d) {
+            return -(d.data.name.length * 8 + 30) / 2
+        })
+        .attr('y', function (d) {
+            return "0px";
+        })
+
 
     node.on(".drag", null);
 
@@ -765,17 +736,9 @@ console.log("renderNodes: nodeEnter", nodeEnter);
         );
     nodeExit.selectAll('circle').transition().duration(300)
         .attr("r", 1e-6)
-        .each('end', d => {
+        .each(d => {
             nodeExit.remove();
         });
-
-    // nodeExit.transition().attr("transform", function (d) {
-    //     return "translate(" + source.y + "," + source.x + ")";
-    // }) .remove();
-    // nodeExit.select("circle")
-    //     .attr("r", 1e-6);
-
-    // renderLabels(nodeEnter, nodeUpdate, nodeExit);
 
     nodes.forEach(function (d) {
         d.x0 = d.x;
@@ -838,8 +801,7 @@ function clickParticulars(type, title, id, opts, nodeClass) {
     });
 }
 function renderLinks(nodes, source) {
-    treeLinks = nodes;
-    // var link = linksG.selectAll("path.tree-linked")
+        treeLinks = nodes;
     var link = linksG.selectAll("g.tree-linked")
         .data(treeLinks, function (d) {
             return d.source.data.name + '-' + d.target.data.name;
@@ -849,17 +811,16 @@ function renderLinks(nodes, source) {
         .attr("d", treeDiagonalC)
         .each("end", function (d) {
             d3.select('#g-' + d.source.data.name + '-' + d.target.data.name).select("text")
-                .attr({
-                    "text-anchor": "middle",
-                    width: "0px",
-                    height: "8px",
-                    dy: function (d) {
-                        return (d.source.x + d.target.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
-                    },
-                    dx: function (d) {
-                        return (d.source.y + d.target.y) / 2 + 'px';
-                    }
-                });
+                .attr("text-anchor", "middle")
+                .attr("width", "0px")
+                .attr("height", "8px")
+                .attr("dy", function (d) {
+                    return (d.source.data.x + d.target.data.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
+                })
+                .attr("dx", function (d) {
+                    return (d.source.data.y + d.target.data.y) / 2 + 'px';
+                })
+
         });
 
     // link.enter().insert("svg:path", "g")
@@ -874,10 +835,7 @@ function renderLinks(nodes, source) {
 
     link.exit().selectAll('path').transition().duration(300)
         .attr("d", function (d) {
-            // var o = {
-            //     x: source.x,
-            //     y: source.y
-            // };
+
             let o = {
                 x: d.source.x,
                 y: d.source.y
@@ -908,8 +866,7 @@ function trans(depth) {
     }).attr("transform", function (d) {
         return "translate(" + d.y + "," + d.x + ")";
     });
-    console.log('trans: ', filterNodes);
-    if (filterNodes[0] && filterNodes[0].length === 0) {
+    if (filterNodes._groups[0].length === 0) {
         transing = false;
         return;
     }
@@ -919,8 +876,7 @@ function trans(depth) {
     depth += 1;
 
     let filterCircle = filterNodes.selectAll("circle");
-    console.log(filterNodes, filterCircle);
-    if (filterCircle[0] && filterCircle[0].length === 0) {
+    if (filterCircle._groups[0].length === 0) {
         transing = false;
         return;
     }
@@ -930,14 +886,7 @@ function trans(depth) {
         .attr('r', function (d) {
             return rMap[d.data.nodeType] || 18
         })
-        // .attr({
-        //     r: function (d) {
-        //         return rMap[d.nodeType] || 18
-        //     }
-        // })
-        // .style("fill", function(d) {
-        //     return d._children ? "lightsteelblue" : "#fff";
-        // })
+
         .each(function (d, index) {
             let select = nodesG.select("#g-" + d.data.name);
             // let iconSvg = $("#icon-node-" + d.nodeType).find("svg").getSVGElement();
@@ -957,24 +906,7 @@ function trans(depth) {
                     .attr('y', function (d) {
                         return 0 - rMap[d.data.nodeType] * 2 / 3;
                     })
-                    // .attr({
-                    //     "class": "icon",
-                    //     "aria-hidden": true,
-                    //     width: function (d) {
-                    //         return rMap[d.data.nodeType] * 4 / 3;
-                    //     },
-                    //     height: function (d) {
-                    //         return rMap[d.data.nodeType] * 4 / 3;
-                    //
-                    //     },
-                    //     x: function (d) {
-                    //         return 0 - rMap[d.data.nodeType] * 2 / 3;
-                    //     },
-                    //     y: function (d) {
-                    //         return 0 - rMap[d.data.nodeType] * 2 / 3;
-                    //     },
-                    // })
-                    // .append("use")
+
                     .attr("xlink:href", function (d) {
                         return "/images/svg/" + d.data.nodeType + ".svg";
                     })
@@ -988,15 +920,7 @@ function trans(depth) {
                         return (rMap[d.data.nodeType] || 18) +
                             parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
                     })
-                    // .attr({
-                    //
-                    // "text-anchor": "middle",
-                    // width: "0px",
-                    // height: "14px",
-                    // dy: function (d) {
-                    //     return (rMap[d.data.nodeType] || 18) +
-                    //         parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
-                    // }})
+
                     .text(function (d) {
                         return d.data.label;
                     }).style('fill-opacity', _.get(d3, ['event', 'scale'], null) < 0.3 ? 0 : 1);
@@ -1008,7 +932,7 @@ function trans(depth) {
                 return l.source.data.name === d.data.name;
             });
 
-            if (filterLinks[0] && filterLinks[0].length === 0) {
+            if (filterLinks._groups[0].length === 0) {
                 transing = false;
             }
 
@@ -1083,8 +1007,7 @@ function trans(depth) {
                             // }
                             // return '';
                         });
-
-                    if (filterCircle[0] && (index + 1) == filterCircle[0].length) {
+                    if ((index + 1) == filterCircle._groups[0].length) {
                         trans(depth);
                     }
 

@@ -384,7 +384,6 @@ function zoomFit() {
         scale = 2
     }
     let translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
-
     // console.trace("zoomFit", translate, scale);
     elementsG
         .transition()
@@ -439,7 +438,6 @@ let treeDiagonalC = function (l) {
 
 function renderTree(source) {
     let nodes = tree.nodes(treeNodes).reverse();
-    console.log('treeNodes:', treeNodes, nodes);
     renderNodes(nodes, source);
     renderLinks(nodes, source);
 
@@ -1072,9 +1070,12 @@ function trans(depth) {
                             // }
                             // return '';
                         });
-
+console.log('filterCircle: ', filterCircle);
+                    console.log(index)
                     if ((index + 1) == filterCircle[0].length) {
                         trans(depth);
+
+                        console.log('depth: ', depth, (index + 1), filterCircle[0].length);
                     }
 
                 });
