@@ -360,12 +360,11 @@ function zoomFit() {
     }
     let translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
 
-    //zoomer.transform(elementsG, `translate(${fullWidth / 2 - scale * midX}，${fullHeight / 2 - scale * midY})`)
+    let t = d3.zoomIdentity.translate(translate[0],translate[1]).scale(scale);
     elementsG
         .transition()
         .duration(500) // milliseconds
-        .attr('transform', `translate(${translate})`)
-        .call(zoomer.event);
+        .call(zoomer.transform, t);
 }
 
 //自动概览缩放聚焦
@@ -409,8 +408,8 @@ let treeDiagonalC = function (l) {
 function renderTree(source) {
     let root = d3.hierarchy(treeNodes);
     let nodes = tree(root);
-    console.log('treeNodes: ',treeNodes, nodes);
-    console.log(nodes.descendants(), nodes.links())
+    // console.log('treeNodes: ',treeNodes, nodes);
+    // console.log(nodes.descendants(), nodes.links())
     renderNodes(nodes.descendants(), source);
     renderLinks(nodes.links(), source);
 
@@ -432,7 +431,6 @@ function renderTree(source) {
 
     trans(depth);
 
-    //                console.log(_links);n
 }
 
 //环形菜单展开
@@ -492,8 +490,7 @@ function renderNodes(nodes, source) {
         .attr("transform", function (d) {
             return "translate(" + d.y + "," + d.x + ")";
         });
-console.log("renderNodes: nodesG", nodesG);
-console.log("renderNodes: node", node);
+
     let nodeEnter = node.enter().append("svg:g")
         .attr('id', function (d) {
             return "g-" + d.data.name;
@@ -724,7 +721,7 @@ console.log("renderNodes: nodeEnter", nodeEnter);
         })
         .attr('y', function (d) {
             return "0px";
-        })
+        });
 
 
     node.on(".drag", null);
@@ -823,14 +820,11 @@ function renderLinks(nodes, source) {
 
         });
 
-    // link.enter().insert("svg:path", "g")
     link.enter().insert("svg:g")
         .attr("id", function (d) {
             return "g-" + d.source.data.name + '-' + d.target.data.name;
         })
         .attr("class", "tree-link");
-
-    // linksG.selectAll("path.tree-linked")
 
 
     link.exit().selectAll('path').transition().duration(300)
@@ -880,8 +874,9 @@ function trans(depth) {
         transing = false;
         return;
     }
+window.a = filterCircle;
 
-    filterCircle.transition().duration(300)
+    window.b = filterCircle.transition().duration(300)
         .style("fill-opacity", "1")
         .attr('r', function (d) {
             return rMap[d.data.nodeType] || 18
@@ -926,8 +921,6 @@ function trans(depth) {
                     }).style('fill-opacity', _.get(d3, ['event', 'scale'], null) < 0.3 ? 0 : 1);
             }
 
-
-            // let filterLinks = d3.selectAll("path.tree-link").filter(function (l) {
             let filterLinks = d3.selectAll("g.tree-link").filter(function (l) {
                 return l.source.data.name === d.data.name;
             });
@@ -949,9 +942,7 @@ function trans(depth) {
                         target: o
                     });
                 })
-                // .transition().easeLinear().duration(300)
                 .attr("d", treeDiagonalC)
-                //                            .style("opacity", "1")
                 .each(function () {
                     if (index != 0) return;
                     nodesG.selectAll("g.node").filter(function (d) {
@@ -973,39 +964,11 @@ function trans(depth) {
                         .attr("dx", function (d) {
                             return (d.source.y + d.target.y) / 2 + 'px';
                         })
-                        // .attr({
-                        //     "text-anchor": "middle",
-                        //     width: "0px",
-                        //     height: "8px",
-                        //     dy: function (d) {
-                        //         return (d.source.x + d.target.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
-                        //     },
-                        //     dx: function (d) {
-                        //         return (d.source.y + d.target.y) / 2 + 'px';
-                        //     }
-                        // })
+
                         .style('fill-opacity', _.get(d3, ['event', 'scale'], null) < 0.3 ? 0 : 1)
                         .text(function (d) {
                             return _.get(linkInfo, [d.source.data.name + '-' + d.target.data.name, 'label'], '');
-                            // let links = null;
-                            // try {
-                            //     links = JSON.parse(d.target.info.info).links;
-                            // } catch (e) {
-                            //     links = null;
-                            // }
-                            // if (!links) return '';
-                            // let name = d.source.name;
-                            // if (d.source.nodeType == 'app' || d.source.nodeType == 'customapp') {
-                            //     return '';
-                            //     name = name.substring(name.indexOf('-') + 1);
-                            // }
-                            // // console.log(name);
-                            // for (let l of links) {
-                            //     if (l.from == name) {
-                            //         return configFields[l.label] || l.label;
-                            //     }
-                            // }
-                            // return '';
+
                         });
                     if ((index + 1) == filterCircle._groups[0].length) {
                         trans(depth);
@@ -1023,8 +986,6 @@ function trans(depth) {
                     drawEndNode(maxNodeDepth);
             }
         });
-
-    //                _bodyG.selectAll("path.linked").attr("d", _diagonal);
 }
 
 function drawEndNode(maxNodeDepth) {
@@ -1276,14 +1237,14 @@ function zoomstart() {
 }
 
 function redraw() {
-    if (d3.event.scale < 0.3) {
+    if (d3.event.transform.k < 0.3) {
         d3.selectAll('g.elementsG text').style("fill-opacity", 0);
         d3.selectAll('g.pieMenu').style("fill-opacity", 0);
     } else {
         d3.selectAll('g.elementsG text').style("fill-opacity", 1);
         d3.selectAll('g.pieMenu').style("fill-opacity", 1);
     }
-    elementsG.attr("transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")");
+    elementsG.attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ")" + "scale(" + d3.event.transform.k + ")");
 }
 
 //拖拽回调

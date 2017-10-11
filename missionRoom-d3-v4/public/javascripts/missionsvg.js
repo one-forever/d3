@@ -894,10 +894,7 @@ function renderLinks(nodes, source) {
 
     link.exit().selectAll('path').transition().duration(300)
         .attr("d", function (d) {
-            // var o = {
-            //     x: source.x,
-            //     y: source.y
-            // };
+
             let o = {
                 x: d.source.x,
                 y: d.source.y
@@ -934,28 +931,23 @@ function trans(depth) {
         return;
     }
 
-
     zoomFitAuto();
     depth += 1;
 
     let filterCircle = filterNodes.selectAll("circle");
-    console.log(filterNodes, filterCircle);
+
     if (filterCircle[0].length === 0) {
-        console.log(filterCircle[0]);
         transing = false;
         return;
     }
-
-    filterCircle.transition().duration(300)
+    window.a = filterCircle;
+    window.b = filterCircle.transition().duration(300)
         .style("fill-opacity", "1")
         .attr({
             r: function (d) {
                 return rMap[d.nodeType] || 18
             }
         })
-        // .style("fill", function(d) {
-        //     return d._children ? "lightsteelblue" : "#fff";
-        // })
         .each("end", function (d, index) {
             let select = nodesG.select("#g-" + d.name);
             // let iconSvg = $("#icon-node-" + d.nodeType).find("svg").getSVGElement();
@@ -1023,7 +1015,6 @@ function trans(depth) {
                 })
                 .transition().ease("linear").duration(300)
                 .attr("d", treeDiagonalC)
-                //                            .style("opacity", "1")
                 .each("start", function () {
                     if (index != 0) return;
                     nodesG.selectAll("g.node").filter(function (d) {
@@ -1070,12 +1061,9 @@ function trans(depth) {
                             // }
                             // return '';
                         });
-console.log('filterCircle: ', filterCircle);
-                    console.log(index)
+
                     if ((index + 1) == filterCircle[0].length) {
                         trans(depth);
-
-                        console.log('depth: ', depth, (index + 1), filterCircle[0].length);
                     }
 
                 });
@@ -1090,8 +1078,6 @@ console.log('filterCircle: ', filterCircle);
                     drawEndNode(maxNodeDepth);
             }
         });
-
-    //                _bodyG.selectAll("path.linked").attr("d", _diagonal);
 }
 
 function drawEndNode(maxNodeDepth) {
@@ -1345,6 +1331,7 @@ function zoomstart() {
 }
 
 function redraw() {
+
     if (d3.event.scale < 0.3) {
         d3.selectAll('g.elementsG text').style("fill-opacity", 0);
         d3.selectAll('g.pieMenu').style("fill-opacity", 0);
