@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script type="text/javascript" src="/libs/d3/d3.js"></script>
+    <script type="text/javascript" src="/libs/jquery/dist/jquery.js"></script>
+    <%- block('header').toString() %>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <div class="body">
+      <%- body %>
+    </div>
+    <%- block('footer').toString() %>
+  </body>
+</html>

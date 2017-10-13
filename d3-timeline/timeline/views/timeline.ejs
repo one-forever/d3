@@ -1,0 +1,36 @@
+<%- layout('index') %>
+<h1>timeline</h1>
+<style>
+    #timeline{
+        width: 100%;
+        height: 48px;
+        background-color: rgba(59, 59, 59, 0.45);
+        border-radius: 4px 4px 0 0;
+    }
+</style>
+<div id="timeline">
+
+</div>
+
+<script type="text/javascript">
+    //svg宽，高
+    var width = $('#timeline').width(),height = $('#timeline').height();
+
+
+    //时间比例尺
+    var timeScale = d3.scaleTime()
+        .domain([new Date(2015, 0, 1), new Date(2016, 0, 1)])
+        .range([0, width - 2]);
+//    timeScale.ticks(d3.timeDay, 15);
+
+    timeScale.tickFormat([8],"%Y");
+    //添加时间轴
+    var svg = d3.select("#timeline").append("svg")
+        .attr("width", width + 32)
+        .attr("height", height + 16)
+        .attr('transform', 'translate(-16, 0)')
+        .append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(" + 16 + "," + (height - 1) + ")")
+        .call(d3.axisBottom(timeScale));
+</script>
