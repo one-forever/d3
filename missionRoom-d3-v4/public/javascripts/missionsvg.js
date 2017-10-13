@@ -940,8 +940,8 @@ function trans(depth) {
         transing = false;
         return;
     }
-    window.a = filterCircle;
-    window.b = filterCircle.transition().duration(300)
+
+    filterCircle.transition().duration(300)
         .style("fill-opacity", "1")
         .attr({
             r: function (d) {
@@ -1271,6 +1271,7 @@ var brusher = d3.svg.brush()
         });
     })
     .on("brushend", function () {
+        console.log(d3.event);
         d3.event.target.clear();
         d3.select(this).call(d3.event.target);
     });
@@ -1917,6 +1918,7 @@ var init = renderTreeW;
 function renderForce(forceNodes, forceLinks) {
     force.stop();
     nodes = nodesG.selectAll("g.node").data(forceNodes, function (d) {
+        console.log(d);
         return d.name || Date.now();
     });
 
@@ -1927,7 +1929,8 @@ function renderForce(forceNodes, forceLinks) {
         d.y = d.py;
         return "translate(" + d.x + "," + d.y + ")";
     });
-
+    console.log(forceNodes, forceLinks, nodes, nodesG);
+    return;
     nodes.on("dblclick", function (d) {
         d3.event.stopPropagation();
     }).on("click", function (d) {
@@ -2784,8 +2787,10 @@ function highlightParentNode(nodeID) {
 function switchLinkTextVisual(nodeID) {
     var nodeData = null;
     var treeLinks = d3.selectAll('g.tree-linked');
+    console.log(treeLinks[0]);
     var selectionPrototype = Object.getPrototypeOf(treeLinks);
     var linksAll = Object.setPrototypeOf([treeLinks[0].concat(links[0])], selectionPrototype);
+    console.log(links, linksAll);
     if (nodeID) {
         nodeData = d3.select('#' + nodeID)[0][0]['__data__'];
         do {

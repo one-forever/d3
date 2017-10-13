@@ -167,3 +167,13 @@ function descEvent(event) {
             return info.uname + ' 进行了操作';
     }
 }
+
+$("#changelayout_btn").click(function () {
+    if (init == renderTreeW) {
+        init = renderForceW;
+    } else {
+        init = renderTreeW;
+    }
+
+    init(forceNodes, forceLinks);
+});
