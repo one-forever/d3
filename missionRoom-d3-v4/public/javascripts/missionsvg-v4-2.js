@@ -1,5 +1,5 @@
 /**
- * Created by admin on 2016/12/7.
+ * Created by zxy on 2017/9/27.
  */
 configObjData = {
     entries: [
@@ -250,39 +250,31 @@ var width = $("#eventgraph").width(),
     height = $("#eventgraph").height(),
     ctrlKey,
     shiftKey,
-    scaleX = d3.scale.linear().domain([0, width]).range([0, width]),
-    scaleY = d3.scale.linear().domain([0, height]).range([0, height]),
-    zoomer = d3.behavior.zoom()
+    scaleX = d3.scaleLinear().domain([0, width]).range([0, width]),
+    scaleY = d3.scaleLinear().domain([0, height]).range([0, height]),
+    zoomer = d3.zoom()
         .scaleExtent([0.1, 10])
-        .x(scaleX)
-        .y(scaleY)
         .on("zoom", redraw),
     svg = d3.select("#eventgraph").attr("tabindex", 1).on("keydown.brush", keydown).on("keyup.brush", keyup).each(function () {
-        this.focus();
-    }).append("svg").attr({"width": width, "height": height}),//.style("background", "radial-gradient(circle, #566D7B, #2F414D, #1C232D)"),
-    force = d3.layout.force()
-        .gravity(0)
-        // .friction(0.9)
-        .linkDistance(function (d) {
-            return 100 + d.target.weight * 10;
+            this.focus();
         })
-        .linkStrength(10)
-        .charge(-100)
-        // .chargeDistance(2000)
-        .size([width, height]),
+        .append("svg")
+        .attr('width', width)
+        .attr('height', height),
+        //.attr({"width": width, "height": height}),//.style("background", "radial-gradient(circle, #566D7B, #2F414D, #1C232D)"),
+    force = d3.forceSimulation()
+        .force('link', d3.forceLink()
+            .distance(function (d) {
+                return 100 + d.target.weight * 10;
+            })
+            .strength(10)
+        ),
     forceNodesT = [],
     forceNodes = force.nodes(),
-    forceLinks = force.links(),
+    forceLinks = d3.forceLink().distance(function (d) {
+        return 100 + d.target.weight * 10;
+    }).strength(10).links(),
     zoomG = svg.append("svg:g").attr("class", "zoom").call(zoomer),
-    // rect = zoomG.append("svg:rect")
-    //     .attr("width", width)
-    //     .attr("height", height)
-    //     .attr("fill", "transparent")
-    //     //.attr("opacity", 0.5)
-    //     .attr("stroke", "transparent")
-    //     // .attr("stroke-width", 1)
-    //     //.attr("pointer-events", "all")
-    //     .attr("id", "zrect"),
     brush = zoomG.append("svg:g")
         .datum(function () {
             return {selectedByMouse: false, previouslySelectedByMouse: false};
@@ -302,48 +294,31 @@ $(function () {
     d3.select(window).on("resize", function (e) {
         width = $("#eventgraph").width();
         height = $("#eventgraph").height();
-        svg.attr({
-            width: $("#eventgraph").width(),
-            height: $("#eventgraph").height()
-        });
-        // rect.attr({
-        //     width: $("#eventgraph").width(),
-        //     height: $("#eventgraph").height()
-        // });
-        // tree.size([height * 2, width]);
+        svg
+            .attr('width', $("#eventgraph").width())
+            .attr('height', $("#eventgraph").height());
+
         force.size([width, height]);
         init(forceNodes, forceLinks);
-        scaleX = d3.scale.linear().domain([0, width]).range([0, width]);
-        scaleY = d3.scale.linear().domain([0, height]).range([0, height]);
+        scaleX = d3.scaleLinear().domain([0, width]).range([0, width]);
+        scaleY = d3.scaleLinear().domain([0, height]).range([0, height]);
         zoomer.x(scaleX).y(scaleY);
-        // zoomer.on("zoom", null);
-        // zoomer.on("zoom", redraw);
-        // init(forceNodes, forceLinks);
-        // zoomFit();
     });
 
 
     $("#eventgraph").on("resize", function (e) {
         width = $("#eventgraph").width();
         height = $("#eventgraph").height();
-        svg.attr({
-            width: $("#eventgraph").width(),
-            height: $("#eventgraph").height()
-        });
-        // rect.attr({
-        //     width: $("#eventgraph").width(),
-        //     height: $("#eventgraph").height()
-        // });
-        // tree.size([height * 2, width]);
+        svg
+            .attr('width', $("#eventgraph").width())
+            .attr('height', $("#eventgraph").height());
+
         force.size([width, height]);
         init(forceNodes, forceLinks);
-        scaleX = d3.scale.linear().domain([0, width]).range([0, width]);
-        scaleY = d3.scale.linear().domain([0, height]).range([0, height]);
+        scaleX = d3.scaleLinear().domain([0, width]).range([0, width]);
+        scaleY = d3.scaleLinear().domain([0, height]).range([0, height]);
         zoomer.x(scaleX).y(scaleY);
-        // zoomer.on("zoom", null);
-        // zoomer.on("zoom", redraw);
-        // init(forceNodes, forceLinks);
-        // zoomFitAuto();
+
     });
 
     /*生成自定义对象选择菜单*/
@@ -384,11 +359,13 @@ function zoomFit() {
         scale = 2
     }
     let translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
-    // console.trace("zoomFit", translate, scale);
+
+    //zoomer.transform(elementsG, `translate(${fullWidth / 2 - scale * midX}，${fullHeight / 2 - scale * midY})`)
     elementsG
         .transition()
         .duration(500) // milliseconds
-        .call(zoomer.translate(translate).scale(scale).event);
+        .attr('transform', `translate()`)
+        .call(zoomer.event);
 }
 
 //自动概览缩放聚焦
@@ -402,34 +379,27 @@ function changeZoomAuto() {
     zoomAuto = !zoomAuto;
     let thisLi = $("#changeZoomAuto");
     thisLi.toggleClass("fa-stop fa-crosshairs");
-    if (zoomAuto) zoomFit();
+    //if (zoomAuto) zoomFit();
 }
 
-
-//tree
-// let tree = d3.layout.tree().size([height * 2, width]).separation(function (a, b) {
-//     console.log(a.parent == b.parent ? (rMap[a.nodeType] + rMap[b.nodeType]) : 2);
-//     return (a.parent == b.parent ? (rMap[a.nodeType] + rMap[b.nodeType]) : (rMap[a.nodeType] + rMap[b.nodeType]));
-// });
-let tree = d3.layout.tree().nodeSize([40, 40]).separation(function (a, b) {
+let tree = d3.tree().nodeSize([40, 40]).separation(function (a, b) {
     return (a.parent == b.parent ? 3 : 2);
 });
 
 let treeNodes = null;
 let treeLinks;
-let treeDiagonal = d3.svg.diagonal()
-    .projection(function (d) {
-        return [d.y, d.x];
-    });
+let treeDiagonal = d3.linkHorizontal()
+    .x(function(d) { return d.y; })
+    .y(function(d) { return d.x; });
 let treeDiagonalC = function (l) {
     let source = {
         x: l.source.x,
-        y: l.source.y + (rMap[l.source.nodeType] || 18)
+        y: l.source.y + (rMap[l.source.data.nodeType] || 18)
     };
 
     let target = {
         x: l.target.x,
-        y: l.target.y - (rMap[l.target.nodeType] || 18)
+        y: l.target.y - (rMap[l.target.data.nodeType] || 18)
     };
 
     return treeDiagonal({source: source, target: target})
@@ -437,9 +407,12 @@ let treeDiagonalC = function (l) {
 
 
 function renderTree(source) {
-    let nodes = tree.nodes(treeNodes).reverse();
-    renderNodes(nodes, source);
-    renderLinks(nodes, source);
+    let root = d3.hierarchy(treeNodes);
+    let nodes = tree(root);
+    console.log('treeNodes: ',treeNodes, nodes);
+    console.log(nodes.descendants(), nodes.links())
+    renderNodes(nodes.descendants(), source);
+    renderLinks(nodes.links(), source);
 
     let depth = null;
     d3.selectAll("circle").filter(function (d) {
@@ -459,8 +432,12 @@ function renderTree(source) {
 
     trans(depth);
 
+    //                console.log(_links);n
 }
+
+//环形菜单展开
 function unfoldChild(targetMenu, d) {
+    console.log('unfoldChild 函数');
     d3.event.stopPropagation();
     var node = targetMenu[0][0].parentNode.parentNode;
     var d3Node = d3.select('#' + node.getAttribute('id'));
@@ -510,26 +487,23 @@ function renderNodes(nodes, source) {
     let enterTimer = NaN;
     let ifexcute = false;
     let node = nodesG.selectAll("g.node")
-        .data(nodes, function (d) {
-            return d.name;
-        });
+        .data(nodes);
     let nodeUpdate = node.transition().duration(300)
         .attr("transform", function (d) {
             return "translate(" + d.y + "," + d.x + ")";
         });
-
+console.log("renderNodes: nodesG", nodesG);
+console.log("renderNodes: node", node);
     let nodeEnter = node.enter().append("svg:g")
-        .attr({
-            id: function (d) {
-                return "g-" + d.name;
-            },
-            class: function (d) {
-                return 'node ' + d.nodeType;
-            }
+        .attr('id', function (d) {
+            return "g-" + d.data.name;
         })
-        // .attr("transform", function (d) {
-        //     return "translate(" + source.y0 + "," + source.x0 + ")";
-        // })
+        .attr('class', function (d) {
+            return 'node ' + d.data.nodeType;
+        })
+        .attr("transform", function (d) {
+            return "translate(" + source.y0 + "," + source.x0 + ")";
+        })
         //绑定移入移出事件
         .on('mouseenter', function () {
             enterTimer = setTimeout(function (nodeId) {
@@ -546,27 +520,9 @@ function renderNodes(nodes, source) {
             }
         })
         .on("mousedown", function (d) {
-            // toggleTree(d);
-            // renderTree(d);
-            if (d.nodeType == 'result' || d.nodeType == 'custom') {
-                // addTab(d)
-                // let left;
-                // let rightClick = isRightClick(event);
-                // if (rightClick) {
-                //     console.debug(d);
-                //     if ((window.width - event.clientX) < (200 + $("#splitterRight").width())) {
-                //         left = event.offsetX - 200;
-                //     } else {
-                //         left = event.offsetX;
-                //     }
-                //     $(".spinner").show();
-                //     $('#message_tabs').show('fast',function () {
-                //         addNodeInfo(d);
-                //     }).css({
-                //         top: event.offsetY,
-                //         left: left
-                //     });
-                // }
+
+            if (d.data.nodeType == 'result' || d.data.nodeType == 'custom') {
+                console.log('鼠标事件！');
             }
 
             if (d3.event.defaultPrevented) return;
@@ -580,8 +536,7 @@ function renderNodes(nodes, source) {
             d3.select(this).classed("selected", d.selectedByMouse = !d.previouslySelectedByMouse);
         }).on('click', function (d) {
             //若是drag事件，则取消click事件触发
-            //if (d3.event.defaultPrevented) return;
-            console.log(d);
+
             if (enterTimer) {
                 clearTimeout(enterTimer);
             }
@@ -732,7 +687,7 @@ function renderNodes(nodes, source) {
             };
             // }
             let configData = [];
-            switch (d.nodeType) {
+            switch (d.data.nodeType) {
                 case 'room':
                     configData = [
                         data.particular,
@@ -753,27 +708,24 @@ function renderNodes(nodes, source) {
             var radius = {innerRadius: rMap[d.nodeType] + 5, outerRadius: rMap[d.nodeType] + 35},
                 position = [0, 0];
             renderPieMenu(d3Node, position, radius, null, configData, 'firstPieMenu');
-            /*            if ($node.is('.result, .backobject, .custom, .object')) {
-             renderPieMenu(d3Node, position, radius, null, data);
-             }*/
+
         });
-console.log("renderNodes: node", node);
+
 console.log("renderNodes: nodeEnter", nodeEnter);
     nodeEnter.append("svg:circle")
-    // .style("fill", function (d) {
-    //     return d._children ? "lightsteelblue" : "#fff";
-    // })
         .style("fill-opacity", "1")
-        .attr({
-            r: 1e-6,
-            width: function (d) {
-                return d.name.length * 8 + 30
-            }, height: "18px", x: function (d) {
-                return -(d.name.length * 8 + 30) / 2
-            }, y: function (d) {
-                return "0px";
-            }
+        .attr('r', 1e-6)
+        .attr('width', function (d) {
+            return d.data.name.length * 8 + 30
         })
+        .attr('height', "18px")
+        .attr('x', function (d) {
+            return -(d.data.name.length * 8 + 30) / 2
+        })
+        .attr('y', function (d) {
+            return "0px";
+        })
+
 
     node.on(".drag", null);
 
@@ -784,17 +736,9 @@ console.log("renderNodes: nodeEnter", nodeEnter);
         );
     nodeExit.selectAll('circle').transition().duration(300)
         .attr("r", 1e-6)
-        .each('end', d => {
+        .each(d => {
             nodeExit.remove();
         });
-
-    // nodeExit.transition().attr("transform", function (d) {
-    //     return "translate(" + source.y + "," + source.x + ")";
-    // }) .remove();
-    // nodeExit.select("circle")
-    //     .attr("r", 1e-6);
-
-    // renderLabels(nodeEnter, nodeUpdate, nodeExit);
 
     nodes.forEach(function (d) {
         d.x0 = d.x;
@@ -857,35 +801,32 @@ function clickParticulars(type, title, id, opts, nodeClass) {
     });
 }
 function renderLinks(nodes, source) {
-    treeLinks = tree.links(nodes);
-    console.log('renderLink: ', treeLinks);
-    // var link = linksG.selectAll("path.tree-linked")
+        treeLinks = nodes;
     var link = linksG.selectAll("g.tree-linked")
         .data(treeLinks, function (d) {
-            return d.source.name + '-' + d.target.name;
+            return d.source.data.name + '-' + d.target.data.name;
         });
 
     link.selectAll("path").transition().duration(300)
         .attr("d", treeDiagonalC)
         .each("end", function (d) {
-            d3.select('#g-' + d.source.name + '-' + d.target.name).select("text")
-                .attr({
-                    "text-anchor": "middle",
-                    width: "0px",
-                    height: "8px",
-                    dy: function (d) {
-                        return (d.source.x + d.target.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
-                    },
-                    dx: function (d) {
-                        return (d.source.y + d.target.y) / 2 + 'px';
-                    }
-                });
+            d3.select('#g-' + d.source.data.name + '-' + d.target.data.name).select("text")
+                .attr("text-anchor", "middle")
+                .attr("width", "0px")
+                .attr("height", "8px")
+                .attr("dy", function (d) {
+                    return (d.source.data.x + d.target.data.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
+                })
+                .attr("dx", function (d) {
+                    return (d.source.data.y + d.target.data.y) / 2 + 'px';
+                })
+
         });
 
     // link.enter().insert("svg:path", "g")
     link.enter().insert("svg:g")
         .attr("id", function (d) {
-            return "g-" + d.source.name + '-' + d.target.name;
+            return "g-" + d.source.data.name + '-' + d.target.data.name;
         })
         .attr("class", "tree-link");
 
@@ -894,10 +835,7 @@ function renderLinks(nodes, source) {
 
     link.exit().selectAll('path').transition().duration(300)
         .attr("d", function (d) {
-            // var o = {
-            //     x: source.x,
-            //     y: source.y
-            // };
+
             let o = {
                 x: d.source.x,
                 y: d.source.y
@@ -928,8 +866,7 @@ function trans(depth) {
     }).attr("transform", function (d) {
         return "translate(" + d.y + "," + d.x + ")";
     });
-
-    if (filterNodes[0].length === 0) {
+    if (filterNodes._groups[0].length === 0) {
         transing = false;
         return;
     }
@@ -939,72 +876,63 @@ function trans(depth) {
     depth += 1;
 
     let filterCircle = filterNodes.selectAll("circle");
-    console.log(filterNodes, filterCircle);
-    if (filterCircle[0].length === 0) {
-        console.log(filterCircle[0]);
+    if (filterCircle._groups[0].length === 0) {
         transing = false;
         return;
     }
 
     filterCircle.transition().duration(300)
         .style("fill-opacity", "1")
-        .attr({
-            r: function (d) {
-                return rMap[d.nodeType] || 18
-            }
+        .attr('r', function (d) {
+            return rMap[d.data.nodeType] || 18
         })
-        // .style("fill", function(d) {
-        //     return d._children ? "lightsteelblue" : "#fff";
-        // })
-        .each("end", function (d, index) {
-            let select = nodesG.select("#g-" + d.name);
+
+        .each(function (d, index) {
+            let select = nodesG.select("#g-" + d.data.name);
             // let iconSvg = $("#icon-node-" + d.nodeType).find("svg").getSVGElement();
             if (select.select("image.icon").empty()) {
                 select.append("image")
-                    .attr({
-                        "class": "icon",
-                        "aria-hidden": true,
-                        width: function (d) {
-                            return rMap[d.nodeType] * 4 / 3;
-                        },
-                        height: function (d) {
-                            return rMap[d.nodeType] * 4 / 3;
-
-                        },
-                        x: function (d) {
-                            return 0 - rMap[d.nodeType] * 2 / 3;
-                        },
-                        y: function (d) {
-                            return 0 - rMap[d.nodeType] * 2 / 3;
-                        },
+                    .attr('class', 'icon')
+                    .attr('aria-hidden', true)
+                    .attr('width', function (d) {
+                        return rMap[d.data.nodeType] * 4 / 3;
                     })
-                    // .append("use")
+                    .attr('height', function (d) {
+                        return rMap[d.data.nodeType] * 4 / 3;
+                    })
+                    .attr('x', function (d) {
+                        return 0 - rMap[d.data.nodeType] * 2 / 3;
+                    })
+                    .attr('y', function (d) {
+                        return 0 - rMap[d.data.nodeType] * 2 / 3;
+                    })
+
                     .attr("xlink:href", function (d) {
-                        return "/images/svg/" + d.nodeType + ".svg";
+                        return "/images/svg/" + d.data.nodeType + ".svg";
                     })
                     .style("color", "#fff");
 
-                select.append("svg:text").attr({
-
-                    "text-anchor": "middle",
-                    width: "0px",
-                    height: "14px",
-                    dy: function (d) {
-                        return (rMap[d.nodeType] || 18) +
+                select.append("svg:text")
+                    .attr("text-anchor", "middle")
+                    .attr("width", "0px")
+                    .attr("height", "14px")
+                    .attr("dy", function (d) {
+                        return (rMap[d.data.nodeType] || 18) +
                             parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
-                    }
-                }).text(function (d) {
-                    return d.label;
-                }).style('fill-opacity', _.get(d3, ['event', 'scale'], null) < 0.3 ? 0 : 1);
+                    })
+
+                    .text(function (d) {
+                        return d.data.label;
+                    }).style('fill-opacity', _.get(d3, ['event', 'scale'], null) < 0.3 ? 0 : 1);
             }
 
 
             // let filterLinks = d3.selectAll("path.tree-link").filter(function (l) {
             let filterLinks = d3.selectAll("g.tree-link").filter(function (l) {
-                return l.source.name === d.name;
+                return l.source.data.name === d.data.name;
             });
 
-            if (filterLinks[0].length === 0) {
+            if (filterLinks._groups[0].length === 0) {
                 transing = false;
             }
 
@@ -1021,10 +949,10 @@ function trans(depth) {
                         target: o
                     });
                 })
-                .transition().ease("linear").duration(300)
+                // .transition().easeLinear().duration(300)
                 .attr("d", treeDiagonalC)
                 //                            .style("opacity", "1")
-                .each("start", function () {
+                .each(function () {
                     if (index != 0) return;
                     nodesG.selectAll("g.node").filter(function (d) {
                         return d.depth == depth;
@@ -1033,23 +961,32 @@ function trans(depth) {
                     });
                     zoomFitAuto();
                 })
-                .each("end", function (d) {
+                .each( function (d) {
                     /*console.log('#g-' + d.source.name + '-' + d.target.name);*/
-                    d3.select('#g-' + d.source.name + '-' + d.target.name).append("svg:text")
-                        .attr({
-                            "text-anchor": "middle",
-                            width: "0px",
-                            height: "8px",
-                            dy: function (d) {
-                                return (d.source.x + d.target.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
-                            },
-                            dx: function (d) {
-                                return (d.source.y + d.target.y) / 2 + 'px';
-                            }
+                    d3.select('#g-' + d.source.data.name + '-' + d.target.data.name).append("svg:text")
+                        .attr("text-anchor", "middle")
+                        .attr("width", "0px")
+                        .attr("height", "8px")
+                        .attr("dy", function (d) {
+                            return (d.source.x + d.target.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
                         })
+                        .attr("dx", function (d) {
+                            return (d.source.y + d.target.y) / 2 + 'px';
+                        })
+                        // .attr({
+                        //     "text-anchor": "middle",
+                        //     width: "0px",
+                        //     height: "8px",
+                        //     dy: function (d) {
+                        //         return (d.source.x + d.target.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
+                        //     },
+                        //     dx: function (d) {
+                        //         return (d.source.y + d.target.y) / 2 + 'px';
+                        //     }
+                        // })
                         .style('fill-opacity', _.get(d3, ['event', 'scale'], null) < 0.3 ? 0 : 1)
                         .text(function (d) {
-                            return _.get(linkInfo, [d.source.name + '-' + d.target.name, 'label'], '');
+                            return _.get(linkInfo, [d.source.data.name + '-' + d.target.data.name, 'label'], '');
                             // let links = null;
                             // try {
                             //     links = JSON.parse(d.target.info.info).links;
@@ -1070,12 +1007,8 @@ function trans(depth) {
                             // }
                             // return '';
                         });
-console.log('filterCircle: ', filterCircle);
-                    console.log(index)
-                    if ((index + 1) == filterCircle[0].length) {
+                    if ((index + 1) == filterCircle._groups[0].length) {
                         trans(depth);
-
-                        console.log('depth: ', depth, (index + 1), filterCircle[0].length);
                     }
 
                 });
@@ -1267,10 +1200,8 @@ function toggleAll(d) {
 //end tree
 
 //定义brusher
-var brusher = d3.svg.brush()
-    .x(scaleX)
-    .y(scaleY)
-    .on("brushstart", function (d) {
+var brusher = d3.brush([0,0], [width, height])
+    .on("start", function (d) {
         nodes.each(function (d) {
             d.previouslySelectedByMouse = shiftKey && d.selectedByMouse;
         });
@@ -1281,10 +1212,10 @@ var brusher = d3.svg.brush()
         nodes.classed("selected", function (d) {
             return d.selectedByMouse = d.previouslySelectedByMouse ^
                 (extent[0][0] <= d.x && d.x < extent[1][0]
-                && extent[0][1] <= d.y && d.y < extent[1][1]);
+                    && extent[0][1] <= d.y && d.y < extent[1][1]);
         });
     })
-    .on("brushend", function () {
+    .on("end", function () {
         d3.event.target.clear();
         d3.select(this).call(d3.event.target);
     });
@@ -2402,8 +2333,8 @@ function filterNodesByTime(timer) {
         class: function (d) {
             var nodeTimer = d.info.timer ? d.info.timer : [d.info.eventTime];
             return 'node ' + ((nodeTimer.some(function (time) {
-                    return (time > start && time < end);
-                })) ? d.nodeType : d.nodeType + ' unselected')
+                return (time > start && time < end);
+            })) ? d.nodeType : d.nodeType + ' unselected')
         }
     });
 

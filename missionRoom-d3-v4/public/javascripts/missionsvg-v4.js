@@ -323,7 +323,7 @@ $(function () {
         // tree.size([height * 2, width]);
         force.size([width, height]);
         init(forceNodes, forceLinks);
-        scaleX = d3.scale.linear().domain([0, width]).range([0, width]);
+        scaleX = d3.scaleLinear().domain([0, width]).range([0, width]);
         scaleY = d3.scaleLinear().domain([0, height]).range([0, height]);
         zoomer.x(scaleX).y(scaleY);
         // zoomer.on("zoom", null);
@@ -399,7 +399,7 @@ function zoomFit() {
     elementsG
         .transition()
         .duration(500) // milliseconds
-        .call(zoomer.translate(translate).scale(scale).event);
+        //.call(zoomer.translate(translate).scale(scale).event);
 }
 
 //自动概览缩放聚焦
@@ -449,9 +449,12 @@ let treeDiagonalC = function (l) {
 function renderTree(source) {
     console.log(tree, source, treeNodes);
     // let nodes = tree(treeNodes);
-    // console.log('treeNodes: ',treeNodes, nodes);
-    renderNodes(source, source);
-    renderLinks(source, source);
+    let root = d3.hierarchy(treeNodes);
+    let nodes = tree(root);
+    console.log('treeNodes: ',treeNodes, nodes);
+    console.log(nodes.descendants(), nodes.links())
+    renderNodes(nodes.descendants(), source);
+    renderLinks(nodes.links(), source);
 
     let depth = null;
     d3.selectAll("circle").filter(function (d) {
@@ -473,7 +476,10 @@ function renderTree(source) {
 
     //                console.log(_links);n
 }
+
+//环形菜单展开
 function unfoldChild(targetMenu, d) {
+    console.log('unfoldChild 函数');
     d3.event.stopPropagation();
     var node = targetMenu[0][0].parentNode.parentNode;
     var d3Node = d3.select('#' + node.getAttribute('id'));
@@ -519,30 +525,27 @@ function renderNodes(nodes, source) {
     nodes.forEach(function (d) {
         d.y = d.depth * 180;
     });
-
+    console.log("renderNodes: ", nodes);
     let enterTimer = NaN;
     let ifexcute = false;
     let node = nodesG.selectAll("g.node")
-        .data(nodes, function (d) {
-            return d.name;
-        });
+        .data(nodes);
     let nodeUpdate = node.transition().duration(300)
         .attr("transform", function (d) {
             return "translate(" + d.y + "," + d.x + ")";
         });
-
+console.log("renderNodes: nodesG", nodesG);
+console.log("renderNodes: node", node);
     let nodeEnter = node.enter().append("svg:g")
-        .attr({
-            id: function (d) {
-                return "g-" + d.name;
-            },
-            class: function (d) {
-                return 'node ' + d.nodeType;
-            }
+        .attr('id', function (d) {
+            return "g-" + d.data.name;
         })
-        // .attr("transform", function (d) {
-        //     return "translate(" + source.y0 + "," + source.x0 + ")";
-        // })
+        .attr('class', function (d) {
+            return 'node ' + d.data.nodeType;
+        })
+        .attr("transform", function (d) {
+            return "translate(" + source.y0 + "," + source.x0 + ")";
+        })
         //绑定移入移出事件
         .on('mouseenter', function () {
             enterTimer = setTimeout(function (nodeId) {
@@ -771,6 +774,7 @@ function renderNodes(nodes, source) {
              }*/
         });
 
+console.log("renderNodes: nodeEnter", nodeEnter);
     nodeEnter.append("svg:circle")
     // .style("fill", function (d) {
     //     return d._children ? "lightsteelblue" : "#fff";
@@ -869,17 +873,17 @@ function clickParticulars(type, title, id, opts, nodeClass) {
     });
 }
 function renderLinks(nodes, source) {
-    treeLinks = tree.links(nodes);
+    treeLinks = nodes;
     // var link = linksG.selectAll("path.tree-linked")
     var link = linksG.selectAll("g.tree-linked")
         .data(treeLinks, function (d) {
-            return d.source.name + '-' + d.target.name;
+            return d.source.data.name + '-' + d.target.data.name;
         });
 
     link.selectAll("path").transition().duration(300)
         .attr("d", treeDiagonalC)
         .each("end", function (d) {
-            d3.select('#g-' + d.source.name + '-' + d.target.name).select("text")
+            d3.select('#g-' + d.source.data.name + '-' + d.target.data.name).select("text")
                 .attr({
                     "text-anchor": "middle",
                     width: "0px",
@@ -896,7 +900,7 @@ function renderLinks(nodes, source) {
     // link.enter().insert("svg:path", "g")
     link.enter().insert("svg:g")
         .attr("id", function (d) {
-            return "g-" + d.source.name + '-' + d.target.name;
+            return "g-" + d.source.data.name + '-' + d.target.data.name;
         })
         .attr("class", "tree-link");
 
@@ -939,8 +943,8 @@ function trans(depth) {
     }).attr("transform", function (d) {
         return "translate(" + d.y + "," + d.x + ")";
     });
-
-    if (filterNodes[0].length === 0) {
+    console.log('trans: ', filterNodes);
+    if (filterNodes[0] && filterNodes[0].length === 0) {
         transing = false;
         return;
     }
@@ -950,71 +954,96 @@ function trans(depth) {
     depth += 1;
 
     let filterCircle = filterNodes.selectAll("circle");
-
-    if (filterCircle[0].length === 0) {
+    console.log(filterNodes, filterCircle);
+    if (filterCircle[0] && filterCircle[0].length === 0) {
         transing = false;
         return;
     }
 
     filterCircle.transition().duration(300)
         .style("fill-opacity", "1")
-        .attr({
-            r: function (d) {
-                return rMap[d.nodeType] || 18
-            }
+        .attr('r', function (d) {
+            return rMap[d.data.nodeType] || 18
         })
+        // .attr({
+        //     r: function (d) {
+        //         return rMap[d.nodeType] || 18
+        //     }
+        // })
         // .style("fill", function(d) {
         //     return d._children ? "lightsteelblue" : "#fff";
         // })
-        .each("end", function (d, index) {
-            let select = nodesG.select("#g-" + d.name);
+        .each(function (d, index) {
+            let select = nodesG.select("#g-" + d.data.name);
             // let iconSvg = $("#icon-node-" + d.nodeType).find("svg").getSVGElement();
             if (select.select("image.icon").empty()) {
                 select.append("image")
-                    .attr({
-                        "class": "icon",
-                        "aria-hidden": true,
-                        width: function (d) {
-                            return rMap[d.nodeType] * 4 / 3;
-                        },
-                        height: function (d) {
-                            return rMap[d.nodeType] * 4 / 3;
-
-                        },
-                        x: function (d) {
-                            return 0 - rMap[d.nodeType] * 2 / 3;
-                        },
-                        y: function (d) {
-                            return 0 - rMap[d.nodeType] * 2 / 3;
-                        },
+                    .attr('class', 'icon')
+                    .attr('aria-hidden', true)
+                    .attr('width', function (d) {
+                        return rMap[d.data.nodeType] * 4 / 3;
                     })
+                    .attr('height', function (d) {
+                        return rMap[d.data.nodeType] * 4 / 3;
+                    })
+                    .attr('x', function (d) {
+                        return 0 - rMap[d.data.nodeType] * 2 / 3;
+                    })
+                    .attr('y', function (d) {
+                        return 0 - rMap[d.data.nodeType] * 2 / 3;
+                    })
+                    // .attr({
+                    //     "class": "icon",
+                    //     "aria-hidden": true,
+                    //     width: function (d) {
+                    //         return rMap[d.data.nodeType] * 4 / 3;
+                    //     },
+                    //     height: function (d) {
+                    //         return rMap[d.data.nodeType] * 4 / 3;
+                    //
+                    //     },
+                    //     x: function (d) {
+                    //         return 0 - rMap[d.data.nodeType] * 2 / 3;
+                    //     },
+                    //     y: function (d) {
+                    //         return 0 - rMap[d.data.nodeType] * 2 / 3;
+                    //     },
+                    // })
                     // .append("use")
                     .attr("xlink:href", function (d) {
-                        return "/images/svg/" + d.nodeType + ".svg";
+                        return "/images/svg/" + d.data.nodeType + ".svg";
                     })
                     .style("color", "#fff");
 
-                select.append("svg:text").attr({
-
-                    "text-anchor": "middle",
-                    width: "0px",
-                    height: "14px",
-                    dy: function (d) {
-                        return (rMap[d.nodeType] || 18) +
+                select.append("svg:text")
+                    .attr("text-anchor", "middle")
+                    .attr("width", "0px")
+                    .attr("height", "14px")
+                    .attr("dy", function (d) {
+                        return (rMap[d.data.nodeType] || 18) +
                             parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
-                    }
-                }).text(function (d) {
-                    return d.label;
-                }).style('fill-opacity', _.get(d3, ['event', 'scale'], null) < 0.3 ? 0 : 1);
+                    })
+                    // .attr({
+                    //
+                    // "text-anchor": "middle",
+                    // width: "0px",
+                    // height: "14px",
+                    // dy: function (d) {
+                    //     return (rMap[d.data.nodeType] || 18) +
+                    //         parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
+                    // }})
+                    .text(function (d) {
+                        return d.data.label;
+                    }).style('fill-opacity', _.get(d3, ['event', 'scale'], null) < 0.3 ? 0 : 1);
             }
 
 
             // let filterLinks = d3.selectAll("path.tree-link").filter(function (l) {
             let filterLinks = d3.selectAll("g.tree-link").filter(function (l) {
-                return l.source.name === d.name;
+                return l.source.data.name === d.data.name;
             });
 
-            if (filterLinks[0].length === 0) {
+            if (filterLinks[0] && filterLinks[0].length === 0) {
                 transing = false;
             }
 
@@ -1031,10 +1060,10 @@ function trans(depth) {
                         target: o
                     });
                 })
-                .transition().ease("linear").duration(300)
+                // .transition().easeLinear().duration(300)
                 .attr("d", treeDiagonalC)
                 //                            .style("opacity", "1")
-                .each("start", function () {
+                .each(function () {
                     if (index != 0) return;
                     nodesG.selectAll("g.node").filter(function (d) {
                         return d.depth == depth;
@@ -1043,23 +1072,32 @@ function trans(depth) {
                     });
                     zoomFitAuto();
                 })
-                .each("end", function (d) {
+                .each( function (d) {
                     /*console.log('#g-' + d.source.name + '-' + d.target.name);*/
-                    d3.select('#g-' + d.source.name + '-' + d.target.name).append("svg:text")
-                        .attr({
-                            "text-anchor": "middle",
-                            width: "0px",
-                            height: "8px",
-                            dy: function (d) {
-                                return (d.source.x + d.target.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
-                            },
-                            dx: function (d) {
-                                return (d.source.y + d.target.y) / 2 + 'px';
-                            }
+                    d3.select('#g-' + d.source.data.name + '-' + d.target.data.name).append("svg:text")
+                        .attr("text-anchor", "middle")
+                        .attr("width", "0px")
+                        .attr("height", "8px")
+                        .attr("dy", function (d) {
+                            return (d.source.x + d.target.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
                         })
+                        .attr("dx", function (d) {
+                            return (d.source.y + d.target.y) / 2 + 'px';
+                        })
+                        // .attr({
+                        //     "text-anchor": "middle",
+                        //     width: "0px",
+                        //     height: "8px",
+                        //     dy: function (d) {
+                        //         return (d.source.x + d.target.x) / 2 - 2 + 'px'; //- parseInt(d3.select(this).style("font-size").replace("px", "")) + "px";
+                        //     },
+                        //     dx: function (d) {
+                        //         return (d.source.y + d.target.y) / 2 + 'px';
+                        //     }
+                        // })
                         .style('fill-opacity', _.get(d3, ['event', 'scale'], null) < 0.3 ? 0 : 1)
                         .text(function (d) {
-                            return _.get(linkInfo, [d.source.name + '-' + d.target.name, 'label'], '');
+                            return _.get(linkInfo, [d.source.data.name + '-' + d.target.data.name, 'label'], '');
                             // let links = null;
                             // try {
                             //     links = JSON.parse(d.target.info.info).links;
@@ -1081,7 +1119,7 @@ function trans(depth) {
                             // return '';
                         });
 
-                    if ((index + 1) == filterCircle[0].length) {
+                    if (filterCircle[0] && (index + 1) == filterCircle[0].length) {
                         trans(depth);
                     }
 
