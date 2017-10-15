@@ -1,0 +1,25 @@
+{
+  "name": "d3",
+  "description": "d3 test",
+  "main": "./bin/www",
+  "authors": [
+    "zxy <1178794332@qq.com>"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "123456"
+  ],
+  "homepage": "www.baidu.com",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/libs",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "^4.10.2",
+    "jquery": "^3.2.1"
+  }
+}

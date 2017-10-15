@@ -1,0 +1,137 @@
+body {
+    background-color: #fff;
+}
+
+.zoom-area {
+    fill: transparent;
+    cursor: pointer;
+}
+
+#chart_placeholder {
+    width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+}
+
+.y-tick {
+    stroke: black;
+    fill: none;
+    stroke-width: 1px;
+}
+
+.line-separator, .x-axis {
+    stroke: #d1d1d1;
+    fill: none;
+    stroke-width: 1px;
+    shape-rendering: crispEdges;
+}
+
+.line-separator:last-child {
+    display: none;
+}
+
+.x-axis {
+    position: absolute;
+    z-index: 50;
+}
+
+.label {
+    font-weight: 400;
+}
+
+.x-axis text {
+    stroke: none;
+    fill: black;
+    font-family: 'Open Sans';
+    font-size: 12px;
+}
+.extremum text {
+    font-size: 14px;
+}
+.axes {
+    fill: #fafafa;
+}
+
+text.drop {
+    text-rendering: auto;
+    font-size: 10px;
+    font-family: 'FontAwesome';
+     /*opacity: .7;*/
+    stroke: none;
+    cursor: pointer;
+}
+
+text.drop:hover {
+    font-size: 21px;
+    stroke-width: 2px;
+    stroke: #fff;
+    font-weight: bold;
+    paint-order: stroke;
+}
+
+.grid {
+    stroke:#d1d1d1;
+    cursor:ew-resize;
+}
+
+.graph-body .line {
+    height: 20px;
+    padding: 10px;
+}
+
+.tooltip-inner {
+    white-space: pre;
+    max-width: none;
+}
+
+.timestamp text {
+    fill: #fff;
+}
+.timestamp rect {
+    fill: #000;
+    opacity: .7;
+}
+
+
+input[type="range"] {
+    width: 236px;
+    position: absolute;
+    right: -97px;
+    top: 195px;
+/*     display: inline; */
+    -webkit-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+}
+
+#zoom_in {
+/*     right: 10; */
+    position: absolute;
+    top: 60px;
+    right: 10px;
+}
+
+
+#zoom_out {
+    position: absolute;
+    top: 320px;
+    right: 9px;
+}
+
+.dropdown {
+    position: absolute;
+    top: 20px;
+    right: 50px;
+/*     z-index: -1; */
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
+
+.brush rect.extent {
+    fill: rgba(0, 125, 199, 0.8);
+    shape-rendering: crispEdges;
+}

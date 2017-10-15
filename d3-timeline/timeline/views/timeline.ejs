@@ -1,0 +1,89 @@
+<%- layout('index') %>
+<h1>timeline</h1>
+<style>
+    #timeline{
+        width: 100%;
+        height: 48px;
+        background-color: rgba(59, 59, 59, 0.45);
+        border-radius: 4px 4px 0 0;
+    }
+</style>
+<div id="timeline">
+
+</div>
+
+<script type="text/javascript">
+    //svg宽，高
+    let width = $('#timeline').width(),
+        height = $('#timeline').height(),
+        brushPos = {};
+
+
+    //时间比例尺
+    let timeScale = d3.scaleTime()
+        .domain([new Date(2015, 0, 1), new Date(2016, 0, 1)])
+        .range([0, width]);
+//    timeScale.ticks(d3.timeDay, 15);
+
+    timeScale.tickFormat([8],"%Y");
+
+
+    let scaleLinear = d3.scaleLinear().domain([0, width]).range([0, width]).clamp(true);
+    let zoom = d3.zoom()
+//        .extent([[0,0], [width, height]])
+        .on('zoom', zoomed)
+        .on("start", zoomStart)
+    //        .on("dblclick.zoom", null)
+    let t = d3.zoomIdentity;
+    //添加时间轴
+    let svg = d3.select("#timeline").append("svg")
+        .attr("width", width + 32)
+        .attr("height", height + 16)
+        .style('margin-left', '-16px')
+        .style('padding-left', '16px')
+        .append('g')
+        .call(zoom);
+
+    let axis = d3.axisBottom(timeScale).tickSize(-height)
+    let timeAxis = svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(1, " + (height - 1) + ")")
+        .call(axis);
+
+    let brush = d3.brushX()
+        .extent([[0,0], [width, height]])
+//        .on("start", brushstart)
+//        .on("brush", brushmove)
+        .on("end", brushend)
+
+    let timeBrush = svg.append('g')
+        .attr('class', 'brush')
+        .call(brush)
+
+
+    function brushend() {
+        if (!d3.event.selection) return;
+        brushPos.start = timeScale.invert(d3.event.selection[0]);
+        brushPos.end = timeScale.invert(d3.event.selection[1])
+
+//        console.log('brushend',brushPos);
+    }
+
+    function zoomStart() {
+        //console.log('zoomStart');
+
+    }
+
+    function zoomed() {
+//        console.log('zoomed', d3.event, d3.event.transform.rescaleX(scaleLinear));
+        let newScale = d3.event.transform.rescaleX(timeScale);
+//        window.a = newAxis
+        timeAxis.call(axis.scale(newScale));
+//        timeBrush.call(brush.scale(d3.event.transform.rescaleX(timeScale)));
+//        window.b = d3.event.transform.rescaleX(timeScale);
+        let a = scaleLinear(newScale(Date.parse(timeBrush._groups[0]._brush.selection[0][0], )));
+        let b = scaleLinear(newScale(Date.parse(brushPos.end)));
+//        console.log([a,b]);
+        brush.move(d3.select('.brush'), [a, b]);
+    }
+</script>
