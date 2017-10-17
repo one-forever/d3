@@ -13,77 +13,134 @@
 </div>
 
 <script type="text/javascript">
+    //简体中文本地化
+//    let zh = d3.timeFormatLocale({
+//        decimal: ".",
+//        thousands: ",",
+//        grouping: [3],
+//        currency: ["¥", ""],
+//        dateTime: "%a %b %e %X %Y",
+//        date: "%Y/%-m/%-d",
+//        time: "%H:%M:%S",
+//        periods: ["上午", "下午"],
+//        days: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
+//        shortDays: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
+//        months: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
+//        shortMonths: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"]
+//    });
     //svg宽，高
     let width = $('#timeline').width(),
         height = $('#timeline').height(),
         brushPos = {};
 
 
+    let startTime = new Date(2014, 1, 3, 12, 0, 0),
+        endTime = new Date(2014, 1, 6, 12, 0, 0),
+        maxScaleTime = new Date(2014, 1, 8, 12, 0, 0),
+        minScaleTime = new Date(2014, 1, 1, 12, 0, 0);
+console.log(startTime, endTime);
     //时间比例尺
     let timeScale = d3.scaleTime()
-        .domain([new Date(2015, 0, 1), new Date(2016, 0, 1)])
+        .domain([startTime, endTime])
         .range([0, width]);
-//    timeScale.ticks(d3.timeDay, 15);
-
-    timeScale.tickFormat([8],"%Y");
-
 
     let scaleLinear = d3.scaleLinear().domain([0, width]).range([0, width]).clamp(true);
     let zoom = d3.zoom()
 //        .extent([[0,0], [width, height]])
+//        .translateExtent([[-10, 0], [100, height]])
         .on('zoom', zoomed)
         .on("start", zoomStart)
+        .on("end", zoomEnd)
     //        .on("dblclick.zoom", null)
     let t = d3.zoomIdentity;
     //添加时间轴
-    let svg = d3.select("#timeline").append("svg")
+    let timeline = d3.select("#timeline").append("svg")
         .attr("width", width + 32)
         .attr("height", height + 16)
         .style('margin-left', '-16px')
         .style('padding-left', '16px')
-        .append('g')
-        .call(zoom);
-
+//        .append('g')
+        .attr('class', 'zoom')
+        .call(zoom)
+//        .call(d3.drag())
+//console.log(zh);
     let axis = d3.axisBottom(timeScale).tickSize(-height)
-    let timeAxis = svg.append("g")
+    let timeAxis = timeline.append("g")
         .attr("class", "axis")
-        .attr("transform", "translate(1, " + (height - 1) + ")")
+        .attr("transform", "translate(0, " + (height) + ")")
         .call(axis);
 
     let brush = d3.brushX()
-        .extent([[0,0], [width, height]])
-//        .on("start", brushstart)
+        .extent([[0,1], [width, height]])
+        .on("start", brushStart)
 //        .on("brush", brushmove)
         .on("end", brushend)
 
-    let timeBrush = svg.append('g')
+    let timeBrush = timeline.append('g')
         .attr('class', 'brush')
         .call(brush)
 
-
+//    timeBrush.on('mousedown', function () {
+//
+//    })
+    function brushStart() {
+        console.log('brushStart');
+        if (d3.event.sourceEvent.ctrlKey) {
+            timeBrush.on('.brush', null);
+        }
+    }
     function brushend() {
         if (!d3.event.selection) return;
-        brushPos.start = timeScale.invert(d3.event.selection[0]);
-        brushPos.end = timeScale.invert(d3.event.selection[1])
-
-//        console.log('brushend',brushPos);
+        brushPos.start = d3.zoomTransform(timeline.node()).rescaleX(timeScale).invert(d3.event.selection[0]);
+        brushPos.end = d3.zoomTransform(timeline.node()).rescaleX(timeScale).invert(d3.event.selection[1]);
+        console.log('brushed', brushPos);
     }
 
     function zoomStart() {
-        //console.log('zoomStart');
+        console.log('zoomStart');
+//        zoom.on('zoom', zoomed)
+        brush.on('end', null)
 
     }
 
     function zoomed() {
-//        console.log('zoomed', d3.event, d3.event.transform.rescaleX(scaleLinear));
+        console.log('zoomed');
+        let aa = d3.event.transform.invertX(timeScale(minScaleTime));
+
+        console.log(d3.event);
+
         let newScale = d3.event.transform.rescaleX(timeScale);
-//        window.a = newAxis
+        window.a = d3.event;
+        if (newScale(Date.parse(minScaleTime)) > 1) {
+//                d3.event.transform.invert([0,0])
+//            if (newScale(Date.parse(minScaleTime)) == 0) return;
+//            let bb = d3.event.transform.translate((-timeScale(minScaleTime)), 0);
+//            console.log(d3.event.transform.x-newScale(Date.parse(minScaleTime)), d3.event.transform.x, bb);
+//            zoom.on('zoom', null)
+//            d3.zoomTransform(this).translateBy(-newScale(Date.parse(minScaleTime)), 0);
+//            console.log(1)
+//            d3.event.target.translateBy(d3.select(this),-newScale(Date.parse(minScaleTime)), 0);
+//            newScale = d3.event.transform.rescaleX(timeScale);
+//            zoom.on('zoom', zoomed)
+//            console.log(bb);
+//            timeAxis.attr("transform", "translate(" + -newScale(Date.parse(minScaleTime)) + "," + height + ")");
+
+        }
+
         timeAxis.call(axis.scale(newScale));
-//        timeBrush.call(brush.scale(d3.event.transform.rescaleX(timeScale)));
-//        window.b = d3.event.transform.rescaleX(timeScale);
-        let a = scaleLinear(newScale(Date.parse(timeBrush._groups[0]._brush.selection[0][0], )));
-        let b = scaleLinear(newScale(Date.parse(brushPos.end)));
-//        console.log([a,b]);
-        brush.move(d3.select('.brush'), [a, b]);
+//        console.log(newScale(Date.parse(startTime)));
+        console.log(newScale(Date.parse(minScaleTime)), aa);
+
+        if (d3.keys(brushPos).length && d3.brushSelection(timeBrush.node())) {
+            let a = scaleLinear(newScale(Date.parse(brushPos.start)));
+            let b = scaleLinear(newScale(Date.parse(brushPos.end)));
+            brush.move(d3.select('.brush'), [a,b]);
+        }
+    }
+
+    function zoomEnd() {
+        console.log('zoom end');
+        brush.on('end', brushend);
+//        zoom.on('zoom', null)
     }
 </script>
