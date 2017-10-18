@@ -14,20 +14,20 @@
 
 <script type="text/javascript">
     //简体中文本地化
-//    let zh = d3.timeFormatLocale({
-//        decimal: ".",
-//        thousands: ",",
-//        grouping: [3],
-//        currency: ["¥", ""],
-//        dateTime: "%a %b %e %X %Y",
-//        date: "%Y/%-m/%-d",
-//        time: "%H:%M:%S",
-//        periods: ["上午", "下午"],
-//        days: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
-//        shortDays: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
-//        months: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
-//        shortMonths: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"]
-//    });
+    let zh = d3.timeFormatLocale({
+        decimal: ".",
+        thousands: ",",
+        grouping: [3],
+        currency: ["¥", ""],
+        dateTime: "%a %b %e %X %Y",
+        date: "%Y/%-m/%-d",
+        time: "%H:%M:%S",
+        periods: ["上午", "下午"],
+        days: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
+        shortDays: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
+        months: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
+        shortMonths: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"]
+    });
     //svg宽，高
     let width = $('#timeline').width(),
         height = $('#timeline').height(),
@@ -105,20 +105,26 @@ console.log(startTime, endTime);
 
     function zoomed() {
         console.log('zoomed');
-        let aa = d3.event.transform.invertX(timeScale(minScaleTime));
+//        let aa = d3.event.transform.invertX(timeScale(minScaleTime));
 
         console.log(d3.event);
 
         let newScale = d3.event.transform.rescaleX(timeScale);
-        window.a = d3.event;
-        if (newScale(Date.parse(minScaleTime)) > 1) {
+//        console.log(timeScale.domain())
+        timeAxis.call(axis.scale(newScale));
+        console.log(d3.event.target);
+        window.a = d3.event.transform;
+        if (newScale(Date.parse(minScaleTime)) > 0) {
 //                d3.event.transform.invert([0,0])
 //            if (newScale(Date.parse(minScaleTime)) == 0) return;
-//            let bb = d3.event.transform.translate((-timeScale(minScaleTime)), 0);
+            let bb = d3.event.transform.translate((-(minScaleTime)), 0);
+            let newScale = d3.event.transform.rescaleX(timeScale);
+            timeAxis.call(axis.scale(newScale));
 //            console.log(d3.event.transform.x-newScale(Date.parse(minScaleTime)), d3.event.transform.x, bb);
 //            zoom.on('zoom', null)
 //            d3.zoomTransform(this).translateBy(-newScale(Date.parse(minScaleTime)), 0);
 //            console.log(1)
+
 //            d3.event.target.translateBy(d3.select(this),-newScale(Date.parse(minScaleTime)), 0);
 //            newScale = d3.event.transform.rescaleX(timeScale);
 //            zoom.on('zoom', zoomed)
@@ -127,9 +133,9 @@ console.log(startTime, endTime);
 
         }
 
-        timeAxis.call(axis.scale(newScale));
+
 //        console.log(newScale(Date.parse(startTime)));
-        console.log(newScale(Date.parse(minScaleTime)), aa);
+        console.log(newScale(Date.parse(minScaleTime)));
 
         if (d3.keys(brushPos).length && d3.brushSelection(timeBrush.node())) {
             let a = scaleLinear(newScale(Date.parse(brushPos.start)));
@@ -141,6 +147,6 @@ console.log(startTime, endTime);
     function zoomEnd() {
         console.log('zoom end');
         brush.on('end', brushend);
-//        zoom.on('zoom', null)
+
     }
 </script>
