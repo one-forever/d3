@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>时间轴</title>
+    <script type="text/javascript" src="js/d3.js"></script>
+    <script type="text/javascript" src="js/timeAxis.js"></script>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        #time-axis {
+            width: 80%;
+            margin-top: 200px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 100px;
+            background-color: #1b6d85;
+        }
+    </style>
+</head>
+<body>
+<div id="time-axis"></div>
+<script>
+    let opt = {
+        selector: '#time-axis',
+        starttime: '2017-10-10 06:00:00',
+        endtime: '2017-10-16 06:00:00',
+        mintime: '2017-10-8 06:00:00',
+        maxtime: '2017-10-20 06:00:00',
+        mintick: 60*1000,
+//        maxtick: 24*60*60*1000
+    }
+    console.log(opt);
+    createTimeAxis(opt, function (start, end) {
+        console.log(start, end);
+    })
+</script>
+</body>
+</html>
