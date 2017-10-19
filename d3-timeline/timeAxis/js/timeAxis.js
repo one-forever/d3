@@ -90,15 +90,24 @@ function createTimeAxis(opt, callback) {
         timeline.select('.tips').attr('text-anchor', "middle");
         tips.filter('.center').text(time)
             .attr('x', function () {
-                return (d3.brushSelection(timeBrush.node())[0] + d3.brushSelection(timeBrush.node())[0]) / 2;
+                let center = (d3.brushSelection(timeBrush.node())[0] + d3.brushSelection(timeBrush.node())[1]) / 2;
+                let left = center - this.getBBox().width  / 2;
+                let right = center + this.getBBox().width  / 2;
+                if (left < 0) {
+                    return center - left + 6;
+                } else if (right > width) {
+                    return center - right + width - 6;
+                } else {
+                    return center;
+                }
             })
             .attr('y', 20);
-
 
     });
     timeBrush.select('.selection').on('mouseout', function () {
         console.log(2);
         tips.filter('.center').text('');
+        timeline.select('.tips').attr('text-anchor', "start");
     });
     let formatTime = d3.timeFormat("%Y-%b-%d %H:%M:%S");
     let handle = timeBrush.selectAll('.handle').nodes();
@@ -125,7 +134,11 @@ function createTimeAxis(opt, callback) {
     }
 
     function brushend() {
+
         if (!d3.event.selection) return;
+        let isSameStart = Date.parse(brushPos.start) === Date.parse(NewScale.invert(d3.event.selection[0]));
+        let isSameEnd = Date.parse(brushPos.end) === Date.parse(NewScale.invert(d3.event.selection[1]));
+        if (isSameStart && isSameEnd) return;
         //brushPos.start = d3.zoomTransform(timeline.node()).rescaleX(timeScale).invert(d3.event.selection[0]);
         //brushPos.end = d3.zoomTransform(timeline.node()).rescaleX(timeScale).invert(d3.event.selection[1]);
         brushPos.start = NewScale ? NewScale.invert(d3.event.selection[0]) : timeScale.invert(d3.event.selection[0]);
@@ -238,5 +251,5 @@ function createTimeAxis(opt, callback) {
         }
         return {x:pos.left, y:pos.top};
     }
-
+    window.bb = timeBrush;
 }
