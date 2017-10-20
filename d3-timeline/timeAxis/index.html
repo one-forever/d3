@@ -10,19 +10,31 @@
             margin: 0;
             padding: 0;
         }
+        body{
+            background-color: #323847;
+        }
         #time-axis {
             width: 80%;
+            height: 100px;
             margin-top: 200px;
+
             margin-left: auto;
             margin-right: auto;
-            height: 100px;
-            background-color: #1b6d85;
+            -moz-user-select: none; /*火狐*/
+            -webkit-user-select: none; /*webkit浏览器*/
+            -ms-user-select: none; /*IE10*/
+            -khtml-user-select: none; /*早期浏览器*/
+            user-select: none;
+            background-color: rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
 <body>
 <div id="time-axis"></div>
 <script>
+    //未解决问题：
+    //  1. 时间轴的resize事件
+    //  2. 鼠标由时间轴区域外到时间轴区域内进行brush
     let opt = {
         selector: '#time-axis',
         starttime: '2017-10-10 06:00:00',

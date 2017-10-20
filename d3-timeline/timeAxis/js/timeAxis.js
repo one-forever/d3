@@ -1,6 +1,4 @@
-/**
- * Created by zxy on 2017/10/19.
- */
+
 /*
    * 创建时间轴
    * param - opt object
@@ -15,6 +13,7 @@
    *
    * param - callback function 回调函数 参数为起始时间和结束时间(start, end) 精确到秒
    * */
+
 function createTimeAxis(opt, callback) {
     //简体中文本地化
     let zh = d3.timeFormatDefaultLocale({
@@ -31,9 +30,28 @@ function createTimeAxis(opt, callback) {
         months: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
         shortMonths: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
     });
+    //设置时间格式
+    let formatMillisecond = d3.timeFormat(".%L"),
+        formatSecond = d3.timeFormat(":%S"),
+        formatMinute = d3.timeFormat("%H:%M"),
+        formatHour = d3.timeFormat("%H:00"),
+        formatDay = d3.timeFormat("%B%d"),
+        formatWeek = d3.timeFormat("%B%d"),
+        formatMonth = d3.timeFormat("%B"),
+        formatYear = d3.timeFormat("%Y");
+    function multiFormat(date) {
+        return (d3.timeSecond(date) < date ? formatMillisecond
+            : d3.timeMinute(date) < date ? formatSecond
+                : d3.timeHour(date) < date ? formatMinute
+                    : d3.timeDay(date) < date ? formatHour
+                        : d3.timeMonth(date) < date ? (d3.timeWeek(date) < date ? formatDay : formatWeek)
+                            : d3.timeYear(date) < date ? formatMonth
+                                : formatYear)(date);
+    }
     //svg宽，高
-    let width = document.querySelector(opt.selector).offsetWidth,
-        height = document.querySelector(opt.selector).offsetHeight,
+    let container = document.querySelector(opt.selector),
+        width = container.offsetWidth,
+        height = container.offsetHeight,
         brushPos = {};
 
 
@@ -51,7 +69,6 @@ function createTimeAxis(opt, callback) {
     let timeScale = d3.scaleTime()
         .domain([startTime, endTime]).nice()
         .range([0, width]);
-    timeScale.tickFormat(10, '%b%d');
 
     let scaleLinear = d3.scaleLinear().domain([0, width]).range([0, width]).clamp(true);
     let zoom = d3.zoom()
@@ -65,18 +82,24 @@ function createTimeAxis(opt, callback) {
         .attr("height", height + 16)
         .style('margin-left', '-16px')
         .style('padding-left', '16px')
+        .attr('id', 'time-axis-svg')
         .append('g')
         .attr('class', 'zoom')
         .call(zoom);
 
-    let axis = d3.axisBottom(timeScale).tickSize(-height);
+    let axis = d3.axisBottom(timeScale)
+        .tickSize(-height)
+        .tickFormat(function (date) {
+            return multiFormat(date);
+        }).tickPadding(-10);
+
     let timeAxis = timeline.append("g")
         .attr("class", "axis")
         .attr("transform", "translate(0, " + (height) + ")")
         .call(axis);
 
     let brush = d3.brushX()
-        .extent([[0,1], [width, height]])
+        .extent([[0,0], [width, height]])
         .on('brush', brushing)
         .on("end", brushend);
 
@@ -85,7 +108,7 @@ function createTimeAxis(opt, callback) {
         .call(brush);
 
     timeBrush.select('.selection').on('mouseover', function () {
-        console.log(1);
+
         let time = `${ formatTime(brushPos.start) } 到 ${ formatTime(brushPos.end) }`;
         timeline.select('.tips').attr('text-anchor', "middle");
         tips.filter('.center').text(time)
@@ -105,7 +128,7 @@ function createTimeAxis(opt, callback) {
 
     });
     timeBrush.select('.selection').on('mouseout', function () {
-        console.log(2);
+
         tips.filter('.center').text('');
         timeline.select('.tips').attr('text-anchor', "start");
     });
@@ -113,7 +136,7 @@ function createTimeAxis(opt, callback) {
     let handle = timeBrush.selectAll('.handle').nodes();
     let tips = timeline.append('g').attr('class', 'tips').attr('font-size', 12)
         .selectAll('tip').data(['left', 'right', 'center']).enter()
-        .append('text').attr('class', function (d) { return d; });
+        .append('text').attr('class', function (d) { return d; }).attr('fill', '#fff');
 
     function brushing() {
         //写入tip时间
@@ -122,7 +145,7 @@ function createTimeAxis(opt, callback) {
         }).attr('x', function (d, i) {
             return i === 0 ? handle[1].getBBox().x + 6 : handle[0].getBBox().x - this.getBBox().width;
         }).attr('y', function (d, i) {
-            return i === 0 ? 20 : height - 10;
+            return i === 0 ? 20 : height - 20;
         }).text(function (d, i) {
             return formatTime(NewScale.invert(d3.event.selection[i]));
         }).each(function (d, i) {
@@ -134,24 +157,20 @@ function createTimeAxis(opt, callback) {
     }
 
     function brushend() {
-
         if (!d3.event.selection) return;
         let isSameStart = Date.parse(brushPos.start) === Date.parse(NewScale.invert(d3.event.selection[0]));
         let isSameEnd = Date.parse(brushPos.end) === Date.parse(NewScale.invert(d3.event.selection[1]));
         if (isSameStart && isSameEnd) return;
-        //brushPos.start = d3.zoomTransform(timeline.node()).rescaleX(timeScale).invert(d3.event.selection[0]);
-        //brushPos.end = d3.zoomTransform(timeline.node()).rescaleX(timeScale).invert(d3.event.selection[1]);
         brushPos.start = NewScale ? NewScale.invert(d3.event.selection[0]) : timeScale.invert(d3.event.selection[0]);
         brushPos.end = NewScale ? NewScale.invert(d3.event.selection[1]) : timeScale.invert(d3.event.selection[1]);
         let transTimeStart = Math.floor(Date.parse(brushPos.start) / 1000); //精确到秒
         let transTimeEnd = Math.floor(Date.parse(brushPos.end) / 1000);
         callback(transTimeStart, transTimeEnd);
-        console.log('brushed', brushPos, transTimeStart, transTimeEnd);
+        //console.log('brushed', brushPos, transTimeStart, transTimeEnd);
         tips.text('');
     }
 
     function zoomStart() {
-        //console.log('zoomStart');
         brush.on('end', null);
         brush.on('brush', null);
     }
@@ -160,7 +179,6 @@ function createTimeAxis(opt, callback) {
     let NewScale = timeScale;
     let isSelectionRemove = false;
     function zoomed() {
-        //console.log('zoomed');
         zoom.scaleExtent([0, Infinity]);//恢复缩放最小化限制
         let newScale = d3.event.transform.rescaleX(timeScale).nice();
 
@@ -173,7 +191,7 @@ function createTimeAxis(opt, callback) {
             let newDomain = newScale.domain().map(function (d) {
                 return Date.parse(d) + cha;
             });
-            console.log('已到达左边缘极限');
+            //console.log('已到达左边缘极限');
             newScale.domain(newDomain);
         }
 
@@ -182,7 +200,7 @@ function createTimeAxis(opt, callback) {
             let newDomain = newScale.domain().map(function (d) {
                 return Date.parse(d) - cha;
             })
-            console.log('已到达右边缘极限');
+            //console.log('已到达右边缘极限');
             newScale.domain(newDomain);
         }
 
@@ -190,7 +208,7 @@ function createTimeAxis(opt, callback) {
         rightLimit = maxScaleTime === Infinity ? false : newScale(Date.parse(maxScaleTime)) < width;
 
         if (leftLimit || rightLimit) {
-            console.log('已达到缩放最小化极限');
+            //console.log('已达到缩放最小化极限');
             newScale.domain([minScaleTime, maxScaleTime]);
             zoom.scaleExtent([d3.event.transform.k, Infinity]);//缩放最小化限制
         }
@@ -198,7 +216,7 @@ function createTimeAxis(opt, callback) {
         //设置缩放最小刻度极限
         let ticks = newScale.ticks();
         if (Date.parse(ticks[1]) - Date.parse(ticks[0]) === minTickLen && ticks.length < 12) { //默认1分钟
-            console.log('已达到最小刻度');
+            //console.log('已达到最小刻度');
             zoom.scaleExtent([0, d3.event.transform.k]);
         }
 
@@ -210,9 +228,7 @@ function createTimeAxis(opt, callback) {
 
         timeAxis.call(axis.scale(newScale));
         NewScale = newScale;
-        //window.aa = d3.event.transform
-        //console.log(newScale.domain());
-        //console.log(newScale(Date.parse(minScaleTime)), width - newScale(Date.parse(maxScaleTime)));
+
         //设置brush跟随缩放移动
         if (d3.keys(brushPos).length && d3.brushSelection(timeBrush.node()) || isSelectionRemove) {
             let start = newScale(Date.parse(brushPos.start));
@@ -229,27 +245,19 @@ function createTimeAxis(opt, callback) {
             }
             brush.move(d3.select('.brush'), [a,b]);
         }
+
+        setAxisStyle();
+    }
+
+    setAxisStyle();
+    function setAxisStyle () {
+        timeAxis.selectAll('.tick').each(function (d, i) {
+            d3.select(this).select('text').attr('fill', '#fff');
+        });
     }
 
     function zoomEnd() {
         brush.on('end', brushend);
         brush.on('brush', brushing);
     }
-
-    function getElemPos(obj){
-        let pos = {"top":0, "left":0};
-        if (obj.offsetParent){
-            while (obj.offsetParent){
-                pos.top += obj.offsetTop;
-                pos.left += obj.offsetLeft;
-                obj = obj.offsetParent;
-            }
-        }else if(obj.x){
-            pos.left += obj.x;
-        }else if(obj.x){
-            pos.top += obj.y;
-        }
-        return {x:pos.left, y:pos.top};
-    }
-    window.bb = timeBrush;
 }
